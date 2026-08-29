@@ -1,0 +1,1 @@
+ <img src="https://i.pinimg.com/1200x/9a/2a/d6/9a2ad6e67bbe4cc5bdd68b9f057fc149.jpg" alt="Logo TokoKita" {{ $attributes }}>
