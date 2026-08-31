@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use Illuminate\Support\Facades\Http;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -26,13 +27,23 @@ class LoginRequest extends FormRequest
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
-    {
-        return [
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
-        ];
-    }
+{
+    return [
+        'email'                 => ['required', 'string', 'email'],
+        'password'              => ['required', 'string'],
+        'g-recaptcha-response'  => ['required', function ($attribute, $value, $fail) {
+            $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+                'secret'   => config('services.recaptcha.secret_key'),
+                'response' => $value,
+                'remoteip' => request()->ip(),
+            ]);
 
+            if (!($response->json()['success'] ?? false)) {
+                $fail('Verifikasi reCAPTCHA gagal. Silakan coba lagi.');
+            }
+        }],
+    ];
+}
     /**
      * Attempt to authenticate the request's credentials.
      *

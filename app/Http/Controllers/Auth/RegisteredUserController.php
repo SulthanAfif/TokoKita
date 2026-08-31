@@ -26,10 +26,21 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+    'name'     => ['required', 'string', 'max:255'],
+    'email'    => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+    'password' => ['required', 'confirmed', Rules\Password::defaults()],
+    'g-recaptcha-response' => ['required', function ($attribute, $value, $fail) {
+        $response = \Illuminate\Support\Facades\Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret'   => config('services.recaptcha.secret_key'),
+            'response' => $value,
+            'remoteip' => request()->ip(),
         ]);
+
+        if (!($response->json()['success'] ?? false)) {
+            $fail('Verifikasi reCAPTCHA gagal. Silakan coba lagi.');
+        }
+        }],
+    ]);
 
         $user = User::create([
             'name' => $request->name,
@@ -38,6 +49,7 @@ class RegisteredUserController extends Controller
             'role' => 'customer',
             // email_verified_at sengaja null → harus verifikasi dulu
         ]);
+
 
         event(new Registered($user));
 
