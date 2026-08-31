@@ -41,13 +41,18 @@ class ProductController extends Controller
             'stock' => 'required|integer|min:0',
             'sku' => 'required|string|unique:products,sku',
             'thumbnail' => 'nullable|image|max:2048',
+            'thumbnail_url' => 'nullable|url|max:2048',
             'is_active' => 'boolean',
         ]);
 
         if ($request->hasFile('thumbnail')) {
             // Simpan file ke storage/app/public/products lalu link ke public/storage
             $validated['thumbnail'] = $request->file('thumbnail')->store('products', 'public');
+        } elseif (!empty($validated['thumbnail_url'])) {
+            // Pakai link gambar langsung (tidak disimpan sebagai file lokal)
+            $validated['thumbnail'] = $validated['thumbnail_url'];
         }
+        unset($validated['thumbnail_url']);
 
         $validated['is_active'] = $request->boolean('is_active');
 
@@ -73,15 +78,22 @@ class ProductController extends Controller
             'stock' => 'required|integer|min:0',
             'sku' => 'required|string|unique:products,sku,' . $product->id,
             'thumbnail' => 'nullable|image|max:2048',
+            'thumbnail_url' => 'nullable|url|max:2048',
             'is_active' => 'boolean',
         ]);
 
         if ($request->hasFile('thumbnail')) {
-            if ($product->thumbnail) {
+            if ($product->thumbnail && !str_starts_with($product->thumbnail, 'http')) {
                 Storage::disk('public')->delete($product->thumbnail);
             }
             $validated['thumbnail'] = $request->file('thumbnail')->store('products', 'public');
+        } elseif (!empty($validated['thumbnail_url'])) {
+            if ($product->thumbnail && !str_starts_with($product->thumbnail, 'http')) {
+                Storage::disk('public')->delete($product->thumbnail);
+            }
+            $validated['thumbnail'] = $validated['thumbnail_url'];
         }
+        unset($validated['thumbnail_url']);
 
         $validated['is_active'] = $request->boolean('is_active');
 
@@ -92,7 +104,7 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        if ($product->thumbnail) {
+        if ($product->thumbnail && !str_starts_with($product->thumbnail, 'http')) {
             Storage::disk('public')->delete($product->thumbnail);
         }
         $product->delete();

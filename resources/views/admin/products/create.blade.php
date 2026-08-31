@@ -75,6 +75,14 @@
             <input type="file" name="thumbnail" accept="image/*"
                    class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100">
             @error('thumbnail') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+
+            <p class="text-xs text-slate-400 my-2">— atau —</p>
+
+            <input type="url" name="thumbnail_url" value="{{ old('thumbnail_url') }}"
+                   placeholder="https://contoh.com/gambar-produk.jpg"
+                   class="w-full rounded-xl border-slate-300 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+            <p class="text-xs text-slate-400 mt-1">Tempel link gambar dari internet. Isi salah satu saja (upload file akan diprioritaskan kalau keduanya diisi).</p>
+            @error('thumbnail_url') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
         </div>
 
         <label class="flex items-center gap-2.5 text-sm text-slate-700 cursor-pointer">
