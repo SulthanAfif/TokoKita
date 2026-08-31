@@ -1,11 +1,9 @@
-@extends('layouts.admin')
+<?php $__env->startSection('title', 'Dashboard'); ?>
 
-@section('title', 'Dashboard')
+<?php $__env->startSection('content'); ?>
 
-@section('content')
-{{-- STAT CARDS --}}
 <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-    @foreach([
+    <?php $__currentLoopData = [
         ['label' => 'Jumlah Produk', 'value' => number_format($stats['total_products'], 0, ',', '.'), 'sub' => 'Total produk terdaftar', 'color' => 'bg-violet-50 text-violet-600', 'icon' => 'M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6-3V3a1.5 1.5 0 011.5-1.5h1.5A1.5 1.5 0 0114.25 3v1.5m-9 0h13.5'],
         ['label' => 'Jumlah Kategori', 'value' => number_format($stats['total_categories'], 0, ',', '.'), 'sub' => 'Total kategori produk', 'color' => 'bg-rose-50 text-rose-600', 'icon' => 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z'],
         ['label' => 'Klik Produk', 'value' => number_format($stats['total_clicks'], 0, ',', '.') . 'x', 'sub' => 'Total halaman produk dibuka', 'color' => 'bg-cyan-50 text-cyan-600', 'icon' => 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z'],
@@ -13,25 +11,25 @@
         ['label' => 'Sisa Stok', 'value' => number_format($stats['stock_remaining'], 0, ',', '.') . ' unit', 'sub' => $stats['total_products'] . ' jenis produk', 'color' => 'bg-blue-50 text-blue-600', 'icon' => 'M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5'],
         ['label' => 'Total Pesanan', 'value' => number_format($stats['total_orders'], 0, ',', '.'), 'sub' => $stats['orders_today'] . ' hari ini', 'color' => 'bg-indigo-50 text-indigo-600', 'icon' => 'M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.824.696 2.057 1.668'],
         ['label' => 'Pendapatan', 'value' => 'Rp' . number_format($stats['total_revenue'], 0, ',', '.'), 'sub' => 'Hari ini Rp' . number_format($stats['revenue_today'], 0, ',', '.'), 'color' => 'bg-amber-50 text-amber-600', 'icon' => 'M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375'],
-    ] as $stat)
+    ]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $stat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
         <div class="rounded-2xl bg-white border border-slate-200 p-5">
             <div class="flex items-center justify-between mb-3">
-                <p class="text-xs font-medium text-slate-400 uppercase tracking-wide">{{ $stat['label'] }}</p>
-                <div class="w-9 h-9 rounded-xl {{ $stat['color'] }} flex items-center justify-center">
+                <p class="text-xs font-medium text-slate-400 uppercase tracking-wide"><?php echo e($stat['label']); ?></p>
+                <div class="w-9 h-9 rounded-xl <?php echo e($stat['color']); ?> flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="{{ $stat['icon'] }}" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="<?php echo e($stat['icon']); ?>" />
                     </svg>
                 </div>
             </div>
-            <p class="text-xl sm:text-2xl font-bold text-slate-800">{{ $stat['value'] }}</p>
-            <p class="text-xs text-slate-400 mt-1">{{ $stat['sub'] }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-slate-800"><?php echo e($stat['value']); ?></p>
+            <p class="text-xs text-slate-400 mt-1"><?php echo e($stat['sub']); ?></p>
         </div>
-    @endforeach
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 </div>
 
-{{-- ========== CHARTS ========== --}}
+
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-    {{-- Penjualan 7 hari --}}
+    
     <div class="lg:col-span-2 rounded-2xl bg-white border border-slate-200 p-5">
         <div class="flex items-center justify-between mb-4">
             <div>
@@ -44,7 +42,7 @@
         </div>
     </div>
 
-    {{-- Status pesanan --}}
+    
     <div class="rounded-2xl bg-white border border-slate-200 p-5">
         <div class="mb-4">
             <h3 class="font-semibold text-slate-800">Status Pesanan</h3>
@@ -57,7 +55,7 @@
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-    {{-- Top produk --}}
+    
     <div class="rounded-2xl bg-white border border-slate-200 p-5">
         <div class="mb-4">
             <h3 class="font-semibold text-slate-800">Produk Terlaris</h3>
@@ -68,7 +66,7 @@
         </div>
     </div>
 
-    {{-- Pendapatan bulanan --}}
+    
     <div class="rounded-2xl bg-white border border-slate-200 p-5">
         <div class="mb-4">
             <h3 class="font-semibold text-slate-800">Pendapatan 6 Bulan</h3>
@@ -80,11 +78,11 @@
     </div>
 </div>
 
-{{-- PESANAN TERBARU --}}
+
 <div class="rounded-2xl bg-white border border-slate-200 overflow-hidden">
     <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
         <h3 class="font-semibold text-slate-800">Pesanan Terbaru</h3>
-        <a href="{{ route('admin.orders.index') }}" class="text-xs font-medium text-indigo-600 hover:text-indigo-500">Lihat semua</a>
+        <a href="<?php echo e(route('admin.orders.index')); ?>" class="text-xs font-medium text-indigo-600 hover:text-indigo-500">Lihat semua</a>
     </div>
     <div class="overflow-x-auto table-scroll">
         <table class="w-full text-sm">
@@ -99,8 +97,8 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
-                @forelse($recentOrders as $order)
-                    @php
+                <?php $__empty_1 = true; $__currentLoopData = $recentOrders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $order): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                    <?php
                         $statusColors = [
                             'pending' => 'bg-amber-50 text-amber-700',
                             'paid' => 'bg-blue-50 text-blue-700',
@@ -110,43 +108,44 @@
                             'cancelled' => 'bg-red-50 text-red-700',
                         ];
                         $qty = $order->items->sum('quantity');
-                    @endphp
-                    <tr class="hover:bg-slate-50/50 text-center cursor-pointer" onclick="window.location='{{ route('admin.orders.show', $order) }}'">
-                        <td class="px-4 py-3.5 font-medium text-slate-800 whitespace-nowrap">{{ $order->order_number }}</td>
-                        <td class="px-4 py-3.5 whitespace-nowrap">{{ $order->user->name ?? '-' }}</td>
+                    ?>
+                    <tr class="hover:bg-slate-50/50 text-center cursor-pointer" onclick="window.location='<?php echo e(route('admin.orders.show', $order)); ?>'">
+                        <td class="px-4 py-3.5 font-medium text-slate-800 whitespace-nowrap"><?php echo e($order->order_number); ?></td>
+                        <td class="px-4 py-3.5 whitespace-nowrap"><?php echo e($order->user->name ?? '-'); ?></td>
                         <td class="px-4 py-3.5">
                             <ul class="space-y-0.5 text-xs text-slate-600">
-                                @foreach($order->items as $item)
+                                <?php $__currentLoopData = $order->items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <li>
-                                        <span class="font-medium text-slate-800">{{ $item->product_name }}</span>
-                                        <span class="text-slate-400">×{{ $item->quantity }}</span>
+                                        <span class="font-medium text-slate-800"><?php echo e($item->product_name); ?></span>
+                                        <span class="text-slate-400">×<?php echo e($item->quantity); ?></span>
                                     </li>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </ul>
                         </td>
-                        <td class="px-4 py-3.5 font-semibold text-slate-700">{{ $qty }}</td>
-                        <td class="px-4 py-3.5 font-semibold whitespace-nowrap">Rp{{ number_format($order->total, 0, ',', '.') }}</td>
+                        <td class="px-4 py-3.5 font-semibold text-slate-700"><?php echo e($qty); ?></td>
+                        <td class="px-4 py-3.5 font-semibold whitespace-nowrap">Rp<?php echo e(number_format($order->total, 0, ',', '.')); ?></td>
                         <td class="px-4 py-3.5">
-                            <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium capitalize {{ $statusColors[$order->status] ?? 'bg-slate-100 text-slate-600' }}">
-                                {{ $order->status }}
+                            <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium capitalize <?php echo e($statusColors[$order->status] ?? 'bg-slate-100 text-slate-600'); ?>">
+                                <?php echo e($order->status); ?>
+
                             </span>
                         </td>
                     </tr>
-                @empty
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr>
                         <td colspan="6" class="px-4 py-12 text-center text-slate-400">Belum ada pesanan.</td>
                     </tr>
-                @endforelse
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
 </div>
 
-{{-- Chart.js CDN + init --}}
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const charts = @json($charts);
+    const charts = <?php echo json_encode($charts, 15, 512) ?>;
     const isMobile = window.innerWidth < 640;
     const gridColor = 'rgba(148, 163, 184, 0.15)';
     const tickColor = '#94a3b8';
@@ -335,4 +334,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\proyek porto\TokoKita\resources\views/admin/dashboard.blade.php ENDPATH**/ ?>
