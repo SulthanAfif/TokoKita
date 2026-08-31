@@ -4,6 +4,10 @@
 
 @section('content')
 
+<h1 style="font-size: 40px; color: red;">
+    BLADE TokoKita BERHASIL
+</h1>
+
 {{-- ========== HERO ========== --}}
 <section
     x-data="{
