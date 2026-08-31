@@ -18,7 +18,7 @@ return [
     |
     */
 
-    'default' => env('LOG_CHANNEL', 'stack'),
+    'default' => env('LOG_CHANNEL', 'stderr'),
 
     /*
     |--------------------------------------------------------------------------
@@ -52,10 +52,10 @@ return [
 
     'channels' => [
 
-        'stack' => [
-            'driver' => 'stack',
-            'channels' => explode(',', (string) env('LOG_STACK', 'single')),
-            'ignore_exceptions' => false,
+    'stack' => [
+        'driver' => 'stack',
+        'channels' => explode(',', (string) env('LOG_STACK', 'stderr')),
+        'ignore_exceptions' => false,
         ],
 
         'single' => [
