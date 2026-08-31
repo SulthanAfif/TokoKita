@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\HeroSlide;
 use App\Models\Product;
 use App\Models\SiteSetting;
 use Illuminate\Http\Request;
@@ -42,7 +43,9 @@ class ProductController extends Controller
             'promo_button' => SiteSetting::get('promo_button', 'Cek Sekarang →'),
         ];
 
-        return view('home', compact('categories', 'featuredProducts', 'home'));
+        $heroSlides = HeroSlide::active()->ordered()->get();
+
+        return view('home', compact('categories', 'featuredProducts', 'home', 'heroSlides'));
     }
 
     // Halaman katalog dengan filter kategori, pencarian, dan sorting

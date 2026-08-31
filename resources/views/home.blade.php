@@ -5,11 +5,50 @@
 @section('content')
 
 {{-- ========== HERO ========== --}}
-<section class="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600 text-white shadow-2xl shadow-indigo-500/25">
-    {{-- Decorative blobs --}}
-    <div class="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-pink-500/30 blur-3xl"></div>
-    <div class="absolute -bottom-32 -left-16 w-96 h-96 rounded-full bg-cyan-400/20 blur-3xl"></div>
-    <div class="absolute top-1/2 right-1/4 w-40 h-40 rounded-full bg-yellow-400/10 blur-2xl"></div>
+<section
+    x-data="{
+        slides: {{ $heroSlides->map(fn($s) => ['url' => $s->image_url])->values()->toJson() }},
+        current: 0,
+        timer: null,
+        init() {
+            if (this.slides.length > 1) {
+                this.timer = setInterval(() => {
+                    this.current = (this.current + 1) % this.slides.length;
+                }, 5000);
+            }
+        },
+        destroy() {
+            if (this.timer) clearInterval(this.timer);
+        }
+    }"
+    class="relative overflow-hidden rounded-[2rem] text-white shadow-2xl shadow-indigo-500/25 min-h-[420px] sm:min-h-[480px]"
+>
+    {{-- Background: gradient fallback OR slideshow images --}}
+    <template x-if="slides.length === 0">
+        <div class="absolute inset-0 bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600"></div>
+    </template>
+    <template x-if="slides.length > 0">
+        <div class="absolute inset-0">
+            <template x-for="(slide, index) in slides" :key="index">
+                <div
+                    class="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out"
+                    :class="index === current ? 'opacity-100' : 'opacity-0'"
+                    :style="'background-image: url(' + slide.url + ')'"
+                ></div>
+            </template>
+            {{-- Dark overlay agar teks tetap terbaca --}}
+            <div class="absolute inset-0 bg-gradient-to-r from-indigo-950/80 via-indigo-900/60 to-violet-900/40"></div>
+        </div>
+    </template>
+
+    {{-- Decorative blobs (hanya jika tidak ada slide) --}}
+    <template x-if="slides.length === 0">
+        <div>
+            <div class="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-pink-500/30 blur-3xl"></div>
+            <div class="absolute -bottom-32 -left-16 w-96 h-96 rounded-full bg-cyan-400/20 blur-3xl"></div>
+            <div class="absolute top-1/2 right-1/4 w-40 h-40 rounded-full bg-yellow-400/10 blur-2xl"></div>
+        </div>
+    </template>
 
     <div class="relative grid lg:grid-cols-2 gap-8 items-center px-5 py-10 sm:px-10 sm:py-16 lg:px-12 lg:py-20">
         <div>
@@ -41,7 +80,7 @@
                 </a>
             </div>
 
-            {{-- Stats (bisa diedit di Admin → Statistik Beranda) --}}
+            {{-- Stats --}}
             <div class="mt-10 flex flex-wrap gap-6 sm:gap-10">
                 <div>
                     <p class="text-2xl sm:text-3xl font-extrabold">{{ $home['stat1_value'] }}</p>
@@ -71,7 +110,6 @@
                     <p class="text-lg font-bold text-center">{!! nl2br(e($home['hero_card_title'])) !!}</p>
                     <p class="text-sm text-indigo-100 mt-2 text-center">{{ $home['hero_card_subtitle'] }}</p>
                 </div>
-                {{-- Floating badge --}}
                 <div class="absolute -top-4 -right-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg rotate-12">
                     {{ $home['hero_badge_promo'] }}
                 </div>
@@ -81,6 +119,21 @@
             </div>
         </div>
     </div>
+
+    {{-- Indikator slide (dots) --}}
+    <template x-if="slides.length > 1">
+        <div class="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            <template x-for="(slide, index) in slides" :key="'dot-'+index">
+                <button
+                    type="button"
+                    @click="current = index"
+                    class="w-2.5 h-2.5 rounded-full transition-all duration-300"
+                    :class="index === current ? 'bg-white scale-110' : 'bg-white/40 hover:bg-white/70'"
+                    :aria-label="'Slide ' + (index + 1)"
+                ></button>
+            </template>
+        </div>
+    </template>
 </section>
 
 {{-- ========== TRUST BAR ========== --}}

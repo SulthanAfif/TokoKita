@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\StockController as AdminStockController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
+use App\Http\Controllers\Admin\HeroSlideController as AdminHeroSlideController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
@@ -69,6 +70,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Statistik beranda
     Route::get('pengaturan/statistik', [AdminSettingController::class, 'edit'])->name('settings.edit');
     Route::put('pengaturan/statistik', [AdminSettingController::class, 'update'])->name('settings.update');
+
+    // Slide latar hero
+    Route::get('hero-slides', [AdminHeroSlideController::class, 'index'])->name('hero-slides.index');
+    Route::post('hero-slides', [AdminHeroSlideController::class, 'store'])->name('hero-slides.store');
+    Route::put('hero-slides/{heroSlide}', [AdminHeroSlideController::class, 'update'])->name('hero-slides.update');
+    Route::delete('hero-slides/{heroSlide}', [AdminHeroSlideController::class, 'destroy'])->name('hero-slides.destroy');
+    Route::post('hero-slides/reorder', [AdminHeroSlideController::class, 'reorder'])->name('hero-slides.reorder');
 
     // Pesanan
     Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
