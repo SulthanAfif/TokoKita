@@ -16,10 +16,13 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Paksa semua URL yang di-generate (asset, route, dll) pakai https di production,
-        // supaya tidak kena Mixed Content saat dihosting di Vercel.
+        // Paksa semua URL yang di-generate (asset, route, dll) pakai domain & skema dari
+        // APP_URL di production. Ini mencegah salah domain/Mixed Content akibat header
+        // proxy (X-Forwarded-Host/Proto) dari Vercel yang kadang tidak konsisten dengan
+        // domain custom yang sebenarnya diakses user.
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
+            URL::forceRootUrl(config('app.url'));
         }
 
         // Bagikan jumlah item keranjang ke semua view (notifikasi ikon)
