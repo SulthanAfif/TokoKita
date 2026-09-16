@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Migration: create_pages_table
+ * -----------------------------
+ * Halaman statis: Tentang Kami & Kontak.
+ * meta (JSON) menyimpan email/phone/address untuk halaman kontak.
+ */
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

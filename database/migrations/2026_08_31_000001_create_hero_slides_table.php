@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Migration: create_hero_slides_table
+ * -----------------------------------
+ * Gambar carousel di beranda.
+ * sort_order untuk urutan, is_active untuk aktif/nonaktif.
+ */
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

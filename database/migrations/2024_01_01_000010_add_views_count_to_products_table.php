@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * Migration: add_views_count_to_products_table
+ * -------------------------------------------
+ * Tambah kolom views_count (berapa kali produk dilihat).
+ */
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

@@ -7,12 +7,26 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
 
+/**
+ * OrderController (Admin)
+ * -----------------------
+ * Mengelola pesanan dari sisi admin:
+ * - Lihat daftar pesanan (filter status + search)
+ * - Lihat detail pesanan
+ * - Ubah status pesanan (pending → paid → processing → shipped → completed)
+ */
 class OrderController extends Controller
 {
+    /**
+     * Daftar semua pesanan
+     * Filter: ?status=pending | ?search=ORD-xxx atau nama customer
+     */
     public function index(Request $request)
     {
         $orders = Order::with(['user', 'items'])
+            // Filter berdasarkan status
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
+            // Search: nomor order / nama customer / nama produk
             ->when($request->search, function ($q) use ($request) {
                 $q->where(function ($q) use ($request) {
                     $q->where('order_number', 'like', '%' . $request->search . '%')
@@ -24,7 +38,7 @@ class OrderController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        // Ringkasan: total unit dari semua pesanan yang tampil (filter aktif)
+        // Hitung total unit terjual sesuai filter aktif
         $totalUnits = OrderItem::query()
             ->whereHas('order', function ($q) use ($request) {
                 if ($request->status) {
@@ -38,12 +52,19 @@ class OrderController extends Controller
         return view('admin.orders.index', compact('orders', 'totalUnits'));
     }
 
+    /**
+     * Detail 1 pesanan (user, items, alamat)
+     */
     public function show(Order $order)
     {
         $order->load('user', 'items', 'address');
         return view('admin.orders.show', compact('order'));
     }
 
+    /**
+     * Ubah status pesanan
+     * Jika status diubah ke "paid" dan belum ada paid_at → isi otomatis
+     */
     public function updateStatus(Request $request, Order $order)
     {
         $request->validate([
@@ -51,8 +72,11 @@ class OrderController extends Controller
         ]);
 
         $order->update([
-            'status' => $request->status,
-            'paid_at' => $request->status === 'paid' && !$order->paid_at ? now() : $order->paid_at,
+            'status'  => $request->status,
+            // Jika baru dibayar, catat waktu bayar
+            'paid_at' => $request->status === 'paid' && !$order->paid_at
+                ? now()
+                : $order->paid_at,
         ]);
 
         return back()->with('success', 'Status pesanan berhasil diubah menjadi: ' . $request->status);

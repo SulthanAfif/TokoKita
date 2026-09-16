@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Migration: create_product_images_table
+ * --------------------------------------
+ * Galeri gambar produk (selain thumbnail).
+ * sort_order menentukan urutan tampil.
+ */
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

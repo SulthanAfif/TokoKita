@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Migration: create_categories_table
+ * ----------------------------------
+ * Tabel kategori produk (Elektronik, Fashion, dll).
+ * Relasi: 1 kategori punya banyak produk.
+ */
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

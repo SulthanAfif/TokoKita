@@ -1,0 +1,15 @@
+[33m2cad821[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Serve Vite assets through Laravel
+[33m80573ac[m Simplify Vercel configuration
+[33me318ad4[m Simplify Vercel Laravel PHP configuration
+[33m37c3e67[m Fix Vite static assets on Vercel
+[33m8e04614[m Fix Vite assets on Vercel
+[33mc81a35a[m Fix HTTPS proxy configuration
+[33m98d086b[m Fix HTTPS behind Vercel proxy
+[33mbc374da[m Test Laravel Blade rendering
+[33mc4e962c[m Fix Laravel emergency logging for Vercel
+[33maf95170[m Fix Laravel logging on Vercel
+[33mc1b2922[m Fix Laravel Vercel configuration
+[33me627532[m Update Vercel PHP runtime
+[33m0c9c8cc[m configure Laravel for Vercel
+[33mc35f817[m prepare deployment
+[33m94660ed[m feat: hero background slideshow yang bisa diubah lewat admin

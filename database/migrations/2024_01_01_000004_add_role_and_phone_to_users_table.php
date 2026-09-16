@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * Migration: add_role_and_phone_to_users_table
+ * -------------------------------------------
+ * Tambah kolom role (admin/customer) dan phone ke tabel users.
+ */
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

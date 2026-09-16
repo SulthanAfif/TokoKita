@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Migration: create_addresses_table
+ * ---------------------------------
+ * Alamat pengiriman milik user.
+ * Dipakai saat checkout.
+ */
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

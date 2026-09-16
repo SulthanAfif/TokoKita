@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Migration: create_site_settings_table
+ * -------------------------------------
+ * Pengaturan dinamis beranda (key-value).
+ * Contoh key: hero_title_1, trust_1_title, promo_button.
+ */
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

@@ -8,38 +8,63 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * OrderController (Customer)
+ * --------------------------
+ * Mengatur halaman pesanan dari sisi customer:
+ * - Daftar pesanan
+ * - Detail pesanan
+ * - Halaman & proses pembayaran
+ * - Batalkan pesanan
+ * - Ubah metode pembayaran
+ */
 class OrderController extends Controller
 {
-    public function index(\Illuminate\Http\Request $request)
+    /**
+     * Daftar semua pesanan milik user yang login
+     * Bisa difilter berdasarkan status (?status=pending)
+     */
+    public function index(Request $request)
     {
         $orders = Auth::user()->orders()
+            // Filter status jika ada parameter ?status=
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+            ->latest()                          // Urutkan terbaru dulu
+            ->paginate(10)                      // 10 per halaman
+            ->withQueryString();                // Tetap bawa parameter filter di pagination
+
         return view('orders.index', compact('orders'));
     }
 
+    /**
+     * Detail 1 pesanan
+     * Hanya pemilik pesanan yang boleh melihat
+     */
     public function show(Order $order)
     {
+        // Keamanan: pastikan order milik user yang sedang login
         abort_if($order->user_id !== Auth::id(), 403);
 
+        // Load item + alamat
         $order->load('items', 'address');
+
         return view('orders.show', compact('order'));
     }
 
     /**
-     * Halaman pembayaran (transfer / e-wallet).
+     * Halaman pembayaran (khusus transfer bank & e-wallet)
      */
     public function payment(Order $order)
     {
         abort_if($order->user_id !== Auth::id(), 403);
 
+        // Hanya pesanan pending yang boleh dibayar
         if ($order->status !== 'pending') {
             return redirect()->route('orders.show', $order)
                 ->with('error', 'Pesanan ini sudah tidak menunggu pembayaran.');
         }
 
+        // Hanya metode online yang punya halaman bayar
         if (!in_array($order->payment_method, ['transfer_bank', 'e_wallet'])) {
             return redirect()->route('orders.show', $order)
                 ->with('error', 'Halaman pembayaran hanya untuk Transfer Bank atau E-Wallet.');
@@ -50,8 +75,9 @@ class OrderController extends Controller
     }
 
     /**
-     * Proses pembayaran + verifikasi otomatis.
-     * Status langsung berubah jadi "paid" tanpa perlu admin konfirmasi.
+     * Proses pembayaran (simulasi)
+     * Status langsung diubah jadi "paid" tanpa perlu admin konfirmasi.
+     * (Di production biasanya diganti integrasi Midtrans / Xendit / dll)
      */
     public function processPayment(Request $request, Order $order)
     {
@@ -67,9 +93,9 @@ class OrderController extends Controller
                 ->with('error', 'Pembayaran online hanya untuk Transfer Bank atau E-Wallet.');
         }
 
-        // Verifikasi otomatis: anggap pembayaran berhasil
+        // Update status menjadi paid + catat waktu bayar
         $order->update([
-            'status' => 'paid',
+            'status'  => 'paid',
             'paid_at' => now(),
         ]);
 
@@ -78,7 +104,9 @@ class OrderController extends Controller
     }
 
     /**
-     * Batalkan pesanan (hanya jika masih pending).
+     * Batalkan pesanan
+     * Hanya boleh jika status masih pending.
+     * Stok produk akan dikembalikan.
      */
     public function cancel(Order $order)
     {
@@ -88,12 +116,17 @@ class OrderController extends Controller
             return back()->with('error', 'Pesanan tidak dapat dibatalkan karena sudah diproses.');
         }
 
+        // Transaction agar pengembalian stok + ubah status aman
         DB::transaction(function () use ($order) {
+            // Kembalikan stok setiap item
             foreach ($order->items as $item) {
                 if ($item->product_id) {
-                    Product::where('id', $item->product_id)->increment('stock', $item->quantity);
+                    Product::where('id', $item->product_id)
+                        ->increment('stock', $item->quantity);
                 }
             }
+
+            // Ubah status jadi cancelled
             $order->update(['status' => 'cancelled']);
         });
 
@@ -101,7 +134,7 @@ class OrderController extends Controller
     }
 
     /**
-     * Ubah metode pembayaran (hanya jika masih pending).
+     * Ubah metode pembayaran (hanya jika masih pending)
      */
     public function updatePaymentMethod(Request $request, Order $order)
     {
