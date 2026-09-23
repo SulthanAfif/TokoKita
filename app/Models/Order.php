@@ -25,12 +25,12 @@ class Order extends Model
         'shipping_cost',   // Biaya ongkir
         'total',           // subtotal + shipping_cost
         'status',          // Status pesanan
-        'payment_method',  // transfer_bank / e_wallet / cod
+        'payment_method',  // transfer_bank / e_wallet / cod / midtrans
         'paid_at',         // Kapan dibayar (null jika belum)
-        'snap_token',      // Token Snap Midtrans untuk buka popup pembayaran
-        'midtrans_order_id',       // order_id yang dikirim ke Midtrans
-        'midtrans_transaction_id', // transaction_id dari Midtrans
-        'payment_type',    // Jenis pembayaran yang dipilih user di Snap (gopay, bank_transfer, dll)
+        'snap_token',      // Snap token dari Midtrans
+        'midtrans_order_id',
+        'midtrans_transaction_id',
+        'payment_type',    // bank_transfer, gopay, qris, credit_card, dll
     ];
 
     /**

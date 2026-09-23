@@ -29,7 +29,7 @@
         {{-- METODE PEMBAYARAN --}}
         <div class="rounded-2xl border border-slate-200 bg-white p-6">
             <h3 class="font-semibold text-slate-800 mb-4">Metode Pembayaran</h3>
-            @foreach(['transfer_bank' => 'Transfer Bank', 'e_wallet' => 'E-Wallet', 'cod' => 'Bayar di Tempat (COD)'] as $value => $label)
+            @foreach(['midtrans' => 'Bayar Online (Midtrans)', 'transfer_bank' => 'Transfer Bank', 'e_wallet' => 'E-Wallet', 'cod' => 'Bayar di Tempat (COD)'] as $value => $label)
                 <label class="flex items-center gap-3 border border-slate-200 rounded-xl p-4 mb-3 cursor-pointer has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
                     <input type="radio" name="payment_method" value="{{ $value }}" required>
                     <span class="text-sm font-medium">{{ $label }}</span>

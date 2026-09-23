@@ -15,9 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
     $middleware->alias([
         'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
     ]);
+
+    // Kecualikan webhook Midtrans dari CSRF (server-to-server)
     $middleware->validateCsrfTokens(except: [
         'midtrans/notification',
     ]);
+
     // Percaya proxy Vercel untuk proto/port/for, TAPI JANGAN percaya X-Forwarded-Host.
     // Vercel mengirim header itu dengan domain internal deployment (bukan domain
     // custom/alias yang dipakai user), jadi kalau ikut dipercaya, semua URL asset

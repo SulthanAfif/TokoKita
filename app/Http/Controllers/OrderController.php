@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class OrderController extends Controller
 {
@@ -26,14 +27,12 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         abort_if($order->user_id !== Auth::id(), 403);
+
         $order->load('items', 'address');
+
         return view('orders.show', compact('order'));
     }
 
-    /**
-     * Halaman pembayaran (khusus transfer bank & e-wallet)
-     * Menampilkan tombol yang membuka popup Midtrans Snap.
-     */
     public function payment(Order $order, MidtransService $midtrans)
     {
         abort_if($order->user_id !== Auth::id(), 403);
@@ -43,51 +42,50 @@ class OrderController extends Controller
                 ->with('error', 'Pesanan ini sudah tidak menunggu pembayaran.');
         }
 
-        if (!in_array($order->payment_method, ['transfer_bank', 'e_wallet'])) {
+        if (!in_array($order->payment_method, ['transfer_bank', 'e_wallet', 'midtrans'])) {
             return redirect()->route('orders.show', $order)
-                ->with('error', 'Halaman pembayaran hanya untuk Transfer Bank atau E-Wallet.');
+                ->with('error', 'Halaman pembayaran hanya untuk metode online (Transfer Bank / E-Wallet / Midtrans).');
+        }
+
+        if (!$midtrans->isConfigured()) {
+            Log::error('Midtrans belum dikonfigurasi (SERVER_KEY / CLIENT_KEY kosong)');
+            return redirect()->route('orders.show', $order)
+                ->with('error', 'Pembayaran online belum dikonfigurasi. Hubungi admin.');
         }
 
         $order->load('items');
 
-        try {
-            $snap = $midtrans->createSnapTransaction($order);
-        } catch (\Throwable $e) {
-            Log::error('Gagal membuat Snap token: ' . $e->getMessage());
+        $snapToken = null;
+
+        // Ambil token lama hanya jika kolom ada
+        if (Schema::hasColumn('orders', 'snap_token') && !empty($order->snap_token)) {
+            $snapToken = $order->snap_token;
+        }
+
+        if (!$snapToken) {
+            $snap = $midtrans->createSnapToken($order);
+            $snapToken = $snap['token'] ?? null;
+        }
+
+        if (!$snapToken) {
             return redirect()->route('orders.show', $order)
-                ->with('error', 'Gagal menghubungi Midtrans, silakan coba lagi.');
+                ->with('error', 'Gagal membuat token pembayaran. Pastikan Server Key Midtrans sudah diisi, lalu coba lagi.');
         }
 
         return view('orders.payment', [
-            'order'      => $order,
-            'snapToken'  => $snap['token'],
-            'clientKey'  => config('services.midtrans.client_key'),
-            'isProduction' => (bool) config('services.midtrans.is_production'),
+            'order'     => $order,
+            'snapToken' => $snapToken,
+            'clientKey' => $midtrans->getClientKey(),
+            'snapJsUrl' => $midtrans->getSnapJsUrl(),
         ]);
     }
 
-    // processPayment() dibiarkan seperti semula (sudah tidak dipakai dari view lagi)
     public function processPayment(Request $request, Order $order)
     {
         abort_if($order->user_id !== Auth::id(), 403);
 
-        if ($order->status !== 'pending') {
-            return redirect()->route('orders.show', $order)
-                ->with('error', 'Pesanan ini sudah tidak menunggu pembayaran.');
-        }
-
-        if (!in_array($order->payment_method, ['transfer_bank', 'e_wallet'])) {
-            return redirect()->route('orders.show', $order)
-                ->with('error', 'Pembayaran online hanya untuk Transfer Bank atau E-Wallet.');
-        }
-
-        $order->update([
-            'status'  => 'paid',
-            'paid_at' => now(),
-        ]);
-
         return redirect()->route('orders.show', $order)
-            ->with('success', 'Pembayaran berhasil diverifikasi secara otomatis! Pesanan Anda sudah masuk ke admin untuk diproses.');
+            ->with('success', 'Terima kasih! Status pembayaran akan diperbarui otomatis dalam beberapa saat.');
     }
 
     public function cancel(Order $order)
@@ -120,68 +118,15 @@ class OrderController extends Controller
         }
 
         $request->validate([
-            'payment_method' => 'required|in:transfer_bank,e_wallet,cod',
+            'payment_method' => 'required|in:transfer_bank,e_wallet,cod,midtrans',
         ]);
 
-        $order->update(['payment_method' => $request->payment_method]);
+        $data = ['payment_method' => $request->payment_method];
+        if (Schema::hasColumn('orders', 'snap_token')) {
+            $data['snap_token'] = null;
+        }
+        $order->update($data);
 
         return back()->with('success', 'Metode pembayaran berhasil diubah.');
-    }
-
-    /**
-     * Webhook notifikasi dari Midtrans.
-     * Route ini PUBLIK (tanpa auth, tanpa CSRF) karena dipanggil oleh server
-     * Midtrans, bukan oleh browser user.
-     */
-    public function handleNotification(Request $request, MidtransService $midtrans)
-    {
-        $payload = $request->all();
-
-        Log::info('Midtrans notification diterima', $payload);
-
-        if (!$midtrans->isValidSignature($payload)) {
-            Log::warning('Midtrans notification: signature tidak valid', $payload);
-            return response()->json(['message' => 'Invalid signature'], 403);
-        }
-
-        $midtransOrderId = $payload['order_id'] ?? '';
-        $order = Order::where('midtrans_order_id', $midtransOrderId)->first();
-
-        if (!$order) {
-            Log::warning('Midtrans notification: order tidak ditemukan', ['order_id' => $midtransOrderId]);
-            return response()->json(['message' => 'Order not found'], 404);
-        }
-
-        $transactionStatus = $payload['transaction_status'] ?? null;
-        $fraudStatus        = $payload['fraud_status'] ?? null;
-
-        if (in_array($order->status, ['cancelled'])) {
-            return response()->json(['message' => 'Order already final']);
-        }
-
-        $newStatus = match (true) {
-            in_array($transactionStatus, ['capture', 'settlement']) && $fraudStatus !== 'challenge' => 'paid',
-            in_array($transactionStatus, ['deny', 'cancel', 'expire']) => 'cancelled',
-            default => $order->status,
-        };
-
-        $previousStatus = $order->status;
-
-        $order->update([
-            'status'                   => $newStatus,
-            'paid_at'                  => $newStatus === 'paid' ? now() : $order->paid_at,
-            'midtrans_transaction_id'  => $payload['transaction_id'] ?? $order->midtrans_transaction_id,
-            'payment_type'             => $payload['payment_type'] ?? $order->payment_type,
-        ]);
-
-        if ($newStatus === 'cancelled' && $previousStatus !== 'cancelled') {
-            foreach ($order->items as $item) {
-                if ($item->product_id) {
-                    Product::where('id', $item->product_id)->increment('stock', $item->quantity);
-                }
-            }
-        }
-
-        return response()->json(['message' => 'OK']);
     }
 }

@@ -21,6 +21,7 @@
         'cancelled' => 'Dibatalkan',
     ];
     $paymentLabels = [
+        'midtrans' => 'Bayar Online (Midtrans)',
         'transfer_bank' => 'Transfer Bank',
         'e_wallet' => 'E-Wallet',
         'cod' => 'Bayar di Tempat (COD)',
@@ -38,7 +39,7 @@
     </div>
 
     {{-- Banner bayar --}}
-    @if($order->status === 'pending' && in_array($order->payment_method, ['transfer_bank', 'e_wallet']))
+    @if($order->status === 'pending' && in_array($order->payment_method, ['transfer_bank', 'e_wallet', 'midtrans']))
     <div class="rounded-2xl border border-indigo-200 bg-indigo-50 p-6 mb-6">
         <h3 class="font-semibold text-indigo-900 mb-1">Menunggu Pembayaran</h3>
         <p class="text-sm text-indigo-700 mb-4">
@@ -107,7 +108,7 @@
                 @method('PATCH')
                 <label class="block text-xs text-slate-500 mb-1">Ubah metode pembayaran</label>
                 <div class="flex flex-wrap gap-2">
-                    @foreach(['transfer_bank' => 'Transfer Bank', 'e_wallet' => 'E-Wallet', 'cod' => 'COD'] as $val => $label)
+                    @foreach(['midtrans' => 'Midtrans', 'transfer_bank' => 'Transfer Bank', 'e_wallet' => 'E-Wallet', 'cod' => 'COD'] as $val => $label)
                         <label class="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm cursor-pointer has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50">
                             <input type="radio" name="payment_method" value="{{ $val }}"
                                    @checked($order->payment_method === $val) required>

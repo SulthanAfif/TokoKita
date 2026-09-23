@@ -109,7 +109,13 @@ class CheckoutController extends Controller
             return $order;
         });
 
-        // Redirect ke halaman detail pesanan + pesan sukses
+        // Jika metode online → langsung ke halaman bayar (Snap)
+        if (in_array($order->payment_method, ['midtrans', 'transfer_bank', 'e_wallet'])) {
+            return redirect()->route('orders.payment', $order)
+                ->with('success', 'Pesanan berhasil dibuat. Silakan selesaikan pembayaran.');
+        }
+
+        // COD → langsung ke detail
         return redirect()->route('orders.show', $order)
             ->with('success', 'Pesanan berhasil dibuat!');
     }

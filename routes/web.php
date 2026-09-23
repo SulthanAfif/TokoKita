@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\HeroSlideController as AdminHeroSlideController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\MidtransNotificationController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
@@ -53,7 +54,12 @@ Route::get('/kontak', [PageController::class, 'contact'])->name('pages.contact')
 | Middleware 'auth' = harus sudah login
 | Middleware 'verified' = email harus sudah diverifikasi
 */
-Route::post('/midtrans/notification', [OrderController::class, 'handleNotification'])->name('midtrans.notification');
+
+
+// Midtrans HTTP Notification (Webhook) — HARUS public, tanpa auth
+Route::post('/midtrans/notification', [MidtransNotificationController::class, 'handle'])
+    ->name('midtrans.notification');
+
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // ----- KERANJANG BELANJA -----
