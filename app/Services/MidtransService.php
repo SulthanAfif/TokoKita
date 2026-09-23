@@ -17,58 +17,57 @@ class MidtransService
 
     public function __construct()
     {
-        $this->serverKey    = (string) config('midtrans.server_key', env('MIDTRANS_SERVER_KEY', ''));
-        $this->clientKey    = (string) config('midtrans.client_key', env('MIDTRANS_CLIENT_KEY', ''));
-        $this->isProduction = filter_var(
-            config('midtrans.is_production', env('MIDTRANS_IS_PRODUCTION', false)),
-            FILTER_VALIDATE_BOOLEAN
-        );
-        $this->apiUrl = (string) config(
-            'midtrans.api_url',
-            $this->isProduction
+        $this->serverKey = trim((string) config('midtrans.server_key', ''));
+        $this->clientKey = trim((string) config('midtrans.client_key', ''));
+        $this->isProduction = (bool) config('midtrans.is_production', false);
+        $this->apiUrl = (string) (
+            config('midtrans.api_url')
+            ?: ($this->isProduction
                 ? 'https://app.midtrans.com/snap/v1'
-                : 'https://app.sandbox.midtrans.com/snap/v1'
+                : 'https://app.sandbox.midtrans.com/snap/v1')
         );
     }
 
-    /**
-     * Generate Snap Token.
-     * order_id selalu unik (order_number + suffix) supaya bisa retry bayar.
-     */
     public function createSnapToken(Order $order): ?array
     {
         if ($this->serverKey === '') {
-            Log::error('Midtrans Server Key kosong. Set MIDTRANS_SERVER_KEY di Vercel env, lalu Redeploy.');
+            Log::error('Midtrans Server Key kosong');
             return null;
         }
 
         $order->loadMissing(['items', 'user', 'address']);
 
-        // WAJIB unik di Midtrans — jangan pakai order_number saja kalau sudah pernah dipakai
         $midtransOrderId = $order->order_number . '-' . Str::lower(Str::random(8));
 
         $itemDetails = $order->items->map(function ($item) {
             return [
                 'id'       => (string) ($item->product_id ?? $item->id),
-                'price'    => (int) $item->price,
+                'price'    => (int) round((float) $item->price),
                 'quantity' => (int) $item->quantity,
-                'name'     => mb_substr((string) $item->product_name, 0, 50),
+                'name'     => mb_substr((string) ($item->product_name ?: 'Produk'), 0, 50),
             ];
         })->values()->toArray();
 
-        if ((float) $order->shipping_cost > 0) {
+        $shipping = (int) round((float) $order->shipping_cost);
+        if ($shipping > 0) {
             $itemDetails[] = [
                 'id'       => 'SHIPPING',
-                'price'    => (int) $order->shipping_cost,
+                'price'    => $shipping,
                 'quantity' => 1,
                 'name'     => 'Ongkos Kirim',
             ];
         }
 
+        // Midtrans wajib: sum(item) == gross_amount
+        $grossAmount = 0;
+        foreach ($itemDetails as $row) {
+            $grossAmount += $row['price'] * $row['quantity'];
+        }
+
         $payload = [
             'transaction_details' => [
                 'order_id'     => $midtransOrderId,
-                'gross_amount' => (int) $order->total,
+                'gross_amount' => $grossAmount,
             ],
             'item_details'     => $itemDetails,
             'customer_details' => [
@@ -79,9 +78,17 @@ class MidtransService
                     ?? '08000000000',
             ],
             'callbacks' => [
-                'finish' => route('orders.show', $order),
+                'finish' => url('/pesanan/' . $order->id),
             ],
         ];
+
+        Log::info('Midtrans createSnap request', [
+            'api_url' => $this->apiUrl,
+            'is_production' => $this->isProduction,
+            'order_id' => $midtransOrderId,
+            'gross_amount' => $grossAmount,
+            'server_key_prefix' => substr($this->serverKey, 0, 12),
+        ]);
 
         try {
             $response = Http::withBasicAuth($this->serverKey, '')
@@ -117,17 +124,14 @@ class MidtransService
             }
 
             Log::error('Midtrans Snap Token Error', [
-                'order'    => $order->order_number,
-                'midtrans_order_id' => $midtransOrderId,
                 'status'   => $response->status(),
                 'response' => $response->json() ?? $response->body(),
+                'api_url'  => $this->apiUrl,
             ]);
 
             return null;
         } catch (\Throwable $e) {
-            Log::error('Midtrans Exception: ' . $e->getMessage(), [
-                'order' => $order->order_number,
-            ]);
+            Log::error('Midtrans Exception: ' . $e->getMessage());
             return null;
         }
     }
@@ -169,11 +173,11 @@ class MidtransService
 
     public function getSnapJsUrl(): string
     {
-        return (string) config(
-            'midtrans.snap_js_url',
-            $this->isProduction
+        return (string) (
+            config('midtrans.snap_js_url')
+            ?: ($this->isProduction
                 ? 'https://app.midtrans.com/snap/snap.js'
-                : 'https://app.sandbox.midtrans.com/snap/snap.js'
+                : 'https://app.sandbox.midtrans.com/snap/snap.js')
         );
     }
 
