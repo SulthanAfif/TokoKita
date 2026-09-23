@@ -53,7 +53,7 @@ Route::get('/kontak', [PageController::class, 'contact'])->name('pages.contact')
 | Middleware 'auth' = harus sudah login
 | Middleware 'verified' = email harus sudah diverifikasi
 */
-
+Route::post('/midtrans/notification', [OrderController::class, 'handleNotification'])->name('midtrans.notification');
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // ----- KERANJANG BELANJA -----
