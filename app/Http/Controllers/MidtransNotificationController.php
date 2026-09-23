@@ -16,7 +16,6 @@ class MidtransNotificationController extends Controller
     {
         try {
             $payload = $request->all();
-
             Log::info('Midtrans Notification Received', $payload);
 
             if (empty($payload)) {
@@ -34,7 +33,25 @@ class MidtransNotificationController extends Controller
             $transactionId     = $payload['transaction_id'] ?? null;
             $paymentType       = $payload['payment_type'] ?? null;
 
-            $order = Order::where('order_number', $orderId)->first();
+            // Cari order: midtrans_order_id dulu, lalu order_number, lalu prefix order_number-
+            $order = null;
+            if ($orderId) {
+                if (Schema::hasColumn('orders', 'midtrans_order_id')) {
+                    $order = Order::where('midtrans_order_id', $orderId)->first();
+                }
+                if (!$order) {
+                    $order = Order::where('order_number', $orderId)->first();
+                }
+                if (!$order && str_contains($orderId, '-')) {
+                    // Format: ORD-XXXXXXXXXX-abc12345 → ambil prefix order_number
+                    $parts = explode('-', $orderId);
+                    if (count($parts) >= 3) {
+                        // ORD + random10 + suffix → order_number = ORD-XXXXXXXXXX
+                        $prefix = $parts[0] . '-' . $parts[1];
+                        $order = Order::where('order_number', $prefix)->first();
+                    }
+                }
+            }
 
             if (!$order) {
                 Log::warning('Midtrans Order Not Found', ['order_id' => $orderId]);
@@ -50,7 +67,7 @@ class MidtransNotificationController extends Controller
                 $fraudStatus
             );
 
-            DB::transaction(function () use ($order, $newStatus, $transactionId, $paymentType) {
+            DB::transaction(function () use ($order, $newStatus, $transactionId, $paymentType, $orderId) {
                 $updateData = [];
 
                 if (Schema::hasColumn('orders', 'midtrans_transaction_id')) {
@@ -58,6 +75,9 @@ class MidtransNotificationController extends Controller
                 }
                 if (Schema::hasColumn('orders', 'payment_type')) {
                     $updateData['payment_type'] = $paymentType;
+                }
+                if (Schema::hasColumn('orders', 'midtrans_order_id') && $orderId) {
+                    $updateData['midtrans_order_id'] = $orderId;
                 }
 
                 if ($newStatus === 'paid') {
@@ -88,8 +108,6 @@ class MidtransNotificationController extends Controller
             Log::error('Midtrans Notification Exception: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
-            // Tetap return 200 agar Midtrans tidak spam retry berlebihan
-            // (opsional: ganti 500 kalau mau Midtrans retry)
             return response()->json(['message' => 'Internal error'], 500);
         }
     }

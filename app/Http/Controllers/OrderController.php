@@ -27,9 +27,7 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         abort_if($order->user_id !== Auth::id(), 403);
-
         $order->load('items', 'address');
-
         return view('orders.show', compact('order'));
     }
 
@@ -44,7 +42,7 @@ class OrderController extends Controller
 
         if (!in_array($order->payment_method, ['transfer_bank', 'e_wallet', 'midtrans'])) {
             return redirect()->route('orders.show', $order)
-                ->with('error', 'Halaman pembayaran hanya untuk metode online (Transfer Bank / E-Wallet / Midtrans).');
+                ->with('error', 'Halaman pembayaran hanya untuk metode online.');
         }
 
         if (!$midtrans->isConfigured()) {
@@ -55,21 +53,14 @@ class OrderController extends Controller
 
         $order->load('items');
 
-        $snapToken = null;
-
-        // Ambil token lama hanya jika kolom ada
-        if (Schema::hasColumn('orders', 'snap_token') && !empty($order->snap_token)) {
-            $snapToken = $order->snap_token;
-        }
-
-        if (!$snapToken) {
-            $snap = $midtrans->createSnapToken($order);
-            $snapToken = $snap['token'] ?? null;
-        }
+        // SELALU buat token baru (order_id unik) — jangan reuse token lama
+        // Token lama sering invalid / order_id sudah dipakai di Midtrans
+        $snap = $midtrans->createSnapToken($order);
+        $snapToken = $snap['token'] ?? null;
 
         if (!$snapToken) {
             return redirect()->route('orders.show', $order)
-                ->with('error', 'Gagal membuat token pembayaran. Pastikan Server Key Midtrans sudah diisi, lalu coba lagi.');
+                ->with('error', 'Gagal membuat token pembayaran. Coba lagi beberapa saat, atau buat pesanan baru.');
         }
 
         return view('orders.payment', [
@@ -83,9 +74,8 @@ class OrderController extends Controller
     public function processPayment(Request $request, Order $order)
     {
         abort_if($order->user_id !== Auth::id(), 403);
-
         return redirect()->route('orders.show', $order)
-            ->with('success', 'Terima kasih! Status pembayaran akan diperbarui otomatis dalam beberapa saat.');
+            ->with('success', 'Terima kasih! Status akan update otomatis setelah Midtrans mengonfirmasi pembayaran.');
     }
 
     public function cancel(Order $order)
@@ -99,8 +89,7 @@ class OrderController extends Controller
         DB::transaction(function () use ($order) {
             foreach ($order->items as $item) {
                 if ($item->product_id) {
-                    Product::where('id', $item->product_id)
-                        ->increment('stock', $item->quantity);
+                    Product::where('id', $item->product_id)->increment('stock', $item->quantity);
                 }
             }
             $order->update(['status' => 'cancelled']);
@@ -114,7 +103,7 @@ class OrderController extends Controller
         abort_if($order->user_id !== Auth::id(), 403);
 
         if ($order->status !== 'pending') {
-            return back()->with('error', 'Metode pembayaran tidak dapat diubah karena pesanan sudah diproses.');
+            return back()->with('error', 'Metode pembayaran tidak dapat diubah.');
         }
 
         $request->validate([
