@@ -106,28 +106,6 @@ Pada terminal lain, jalankan Vite:
 npm run dev
 ```
 
-## Screenshots
-
-### Home
-
-Tambahkan screenshot halaman utama di sini.
-
-### Product
-
-Tambahkan screenshot halaman produk di sini.
-
-### Cart
-
-Tambahkan screenshot halaman keranjang di sini.
-
-### Checkout
-
-Tambahkan screenshot halaman checkout di sini.
-
-### Admin Dashboard
-
-Tambahkan screenshot dashboard admin di sini.
-
 ## Project Structure
 
 Project dikembangkan menggunakan framework Laravel dengan pemisahan komponen backend, frontend, routes, database, dan resource sesuai struktur Laravel.
