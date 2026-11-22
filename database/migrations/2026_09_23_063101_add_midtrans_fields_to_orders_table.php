@@ -26,8 +26,21 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->dropColumn(['snap_token', 'midtrans_order_id', 'midtrans_transaction_id', 'payment_type']);
-        });
+        $ran = app('migration.repository')->getRan();
+        $columns = [];
+
+        if (!in_array('2026_09_23_000001_add_midtrans_fields_to_orders_table', $ran, true)) {
+            $columns = ['snap_token', 'midtrans_transaction_id', 'payment_type'];
+        }
+
+        if (!in_array('2026_09_23_000002_add_midtrans_order_id_to_orders', $ran, true)) {
+            $columns[] = 'midtrans_order_id';
+        }
+
+        if ($columns !== []) {
+            Schema::table('orders', function (Blueprint $table) use ($columns) {
+                $table->dropColumn($columns);
+            });
+        }
     }
 };
